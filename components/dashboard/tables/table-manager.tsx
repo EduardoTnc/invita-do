@@ -19,7 +19,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, UtensilsCrossed } from "lucide-react";
+import { Plus, Users, UtensilsCrossed, Sparkles, Loader2 } from "lucide-react";
 
 import { assignSeat } from "@/lib/actions/tables";
 import { DraggableGuest } from "./draggable-guest";
@@ -42,6 +42,64 @@ export function TableManager({
     const [tables, setTables] = useState<Table[]>(initialTables);
     const [unseatedGuests, setUnseatedGuests] = useState<Guest[]>(initialUnseatedGuests);
     const [isSaving, setIsSaving] = useState(false);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+
+    const handleAutoOrganize = async () => {
+        if (unseatedGuests.length === 0) return;
+
+        try {
+            setIsAiLoading(true);
+
+            const response = await fetch("/api/ai/auto-organize", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ guests: unseatedGuests, tables }),
+            });
+
+            if (!response.ok) throw new Error("AI Request failed");
+
+            const data = await response.json();
+
+            if (data.assignments && Array.isArray(data.assignments)) {
+                // Loop through AI assignments and assign to free seats
+                let currentTables = [...tables];
+                let currentUnseated = [...unseatedGuests];
+
+                for (const assignment of data.assignments) {
+                    const tableIndex = currentTables.findIndex(t => t.id === assignment.tableId);
+                    if (tableIndex === -1) continue;
+
+                    const freeSeatIndex = currentTables[tableIndex].seats.findIndex(s => !s.guest_id);
+                    if (freeSeatIndex === -1) continue; // Table is full
+
+                    const guestIndex = currentUnseated.findIndex(g => g.id === assignment.guestId);
+                    if (guestIndex === -1) continue;
+
+                    const guest = currentUnseated[guestIndex];
+                    const targetSeat = currentTables[tableIndex].seats[freeSeatIndex];
+
+                    // Optimistic update
+                    currentUnseated.splice(guestIndex, 1);
+                    currentTables[tableIndex].seats[freeSeatIndex] = {
+                        ...targetSeat,
+                        guest_id: guest.id,
+                        guest
+                    };
+
+                    // Server Action
+                    await assignSeat(targetSeat.id, guest.id, eventId);
+                }
+
+                setTables(currentTables);
+                setUnseatedGuests(currentUnseated);
+            }
+        } catch (error) {
+            console.error("Auto-organize failed:", error);
+            alert("Hubo un error al usar la IA para organizar las mesas.");
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -149,7 +207,18 @@ export function TableManager({
                             Plano de Mesas
                         </CardTitle>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => { }} disabled={isSaving}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 gap-2"
+                                onClick={handleAutoOrganize}
+                                disabled={isSaving || isAiLoading || unseatedGuests.length === 0}
+                            >
+                                {isAiLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Sparkles className="w-4 h-4" />
+                                )}
                                 Auto-Organizar IA
                             </Button>
                             <Button size="sm" onClick={() => { }}>

@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Heart,
     LayoutDashboard,
-    Plus,
+    PlusCircle,
     Settings,
     LogOut,
     Crown,
     ChevronLeft,
+    CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,8 +37,9 @@ interface DashboardUser {
 }
 
 const navItems = [
-    { href: "/dashboard", label: "Mis Eventos", icon: LayoutDashboard },
-    { href: "/dashboard/event/create", label: "Nuevo Evento", icon: Plus },
+    { icon: LayoutDashboard, label: "Eventos", href: "/dashboard" },
+    { icon: PlusCircle, label: "Nuevo Evento", href: "/dashboard/event/create" },
+    { icon: CreditCard, label: "Planes", href: "/dashboard/upgrade" },
 ];
 
 export function DashboardShell({

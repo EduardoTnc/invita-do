@@ -60,5 +60,13 @@ export default async function MicrositePage({ params }: MicrositePageProps) {
     const event = data as Event | null;
     if (!event) notFound();
 
-    return <MicrositeContent event={event} />;
+    // Fetch approved photos
+    const { data: photos } = await supabase
+        .from("gallery_photos")
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("status", "APPROVED")
+        .order("created_at", { ascending: false });
+
+    return <MicrositeContent event={event} photos={photos || []} />;
 }

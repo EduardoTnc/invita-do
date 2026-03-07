@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAudioStore } from "@/stores/audio-store";
+import { RsvpForm } from "./rsvp-form";
+import { GalleryFeed } from "./gallery-feed";
 
 interface Event {
     id: string;
@@ -41,9 +43,7 @@ const sectionVariants = {
     },
 };
 
-export function MicrositeContent({ event }: { event: Event }) {
-    const [rsvpName, setRsvpName] = useState("");
-    const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
+export function MicrositeContent({ event, photos }: { event: Event; photos: any[] }) {
     const { isMuted, toggleMute, initAudio } = useAudioStore();
 
     useEffect(() => {
@@ -222,49 +222,20 @@ export function MicrositeContent({ event }: { event: Event }) {
                         Ingresa tu nombre tal como aparece en la invitación
                     </p>
 
-                    {rsvpSubmitted ? (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                        >
-                            <Card className="border-primary/20 bg-primary/5">
-                                <CardContent className="p-8 text-center">
-                                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center">
-                                        <Check className="h-8 w-8 text-green-500" />
-                                    </div>
-                                    <h3 className="text-lg font-heading font-semibold mb-2">
-                                        ¡Asistencia confirmada!
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        Te esperamos. Guarda esta página para más detalles.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ) : (
-                        <Card>
-                            <CardContent className="p-6 space-y-4">
-                                <Input
-                                    placeholder="Tu nombre completo"
-                                    value={rsvpName}
-                                    onChange={(e) => setRsvpName(e.target.value)}
-                                    className="h-12 text-center text-base"
-                                />
-                                <Button
-                                    className="w-full h-12 gap-2"
-                                    disabled={rsvpName.length < 2}
-                                    onClick={() => setRsvpSubmitted(true)}
-                                >
-                                    <Heart className="h-4 w-4" />
-                                    Confirmar asistencia
-                                </Button>
-                                <p className="text-xs text-muted-foreground">
-                                    Al confirmar, el anfitrión recibirá tu respuesta
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
+                    <RsvpForm eventId={event.id} />
                 </div>
+            </motion.section>
+
+            {/* ── Gallery Section ──────────────────────────── */}
+            <motion.section
+                id="gallery"
+                className="py-20 px-6 bg-muted/30 border-y border-border/50"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={sectionVariants}
+            >
+                <GalleryFeed eventId={event.id} initialPhotos={photos} />
             </motion.section>
 
             {/* ── Footer ────────────────────────────────── */}

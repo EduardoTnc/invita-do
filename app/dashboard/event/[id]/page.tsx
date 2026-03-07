@@ -7,11 +7,12 @@ import {
     Calendar,
     Users,
     MapPin,
-    LayoutGrid,
-    Image,
     ArrowLeft,
     ExternalLink,
     Globe,
+    Settings,
+    SplitSquareHorizontal,
+    Images as LucideImage,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,13 +29,15 @@ export default async function EventDetailPage({ params }: EventPageProps) {
     const { id } = await params;
     const supabase = await createClient();
 
-    const { data } = await supabase
+    const { data: event, error } = await supabase
         .from("events")
-        .select("*")
+        .select(`
+            *,
+            profiles(subscription_tier)
+        `)
         .eq("id", id)
         .single();
 
-    const event = data as Event | null;
     if (!event) notFound();
 
     // Get guest group IDs for this event
@@ -74,15 +77,16 @@ export default async function EventDetailPage({ params }: EventPageProps) {
         {
             href: `/dashboard/event/${id}/tables`,
             label: "Mesas",
-            icon: LayoutGrid,
-            description: "Organizar distribución de mesas",
+            description: "Asigna asientos y organiza el plano de mesas.",
+            icon: SplitSquareHorizontal,
+            // badge: "Auto-Organizar con IA",
         },
         {
             href: `/dashboard/event/${id}/gallery`,
             label: "Galería",
-            icon: Image,
-            description: "Fotos del evento en vivo",
-            badge: "Premium",
+            description: "Modera las fotos subidas por tus invitados.",
+            icon: LucideImage,
+            badge: event.profiles?.subscription_tier === "FREE" ? "Premium" : undefined,
         },
     ];
 

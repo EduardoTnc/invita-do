@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+  // cacheComponents: true, // Re-enable PPR when static microsite content is ready
   images: {
     remotePatterns: [
       {

@@ -1,129 +1,97 @@
-import { createClient } from "@/lib/supabase/server";
-import { connection } from "next/server";
-import { Badge } from "@/components/ui/badge";
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, XCircle, Clock, Trash } from "lucide-react";
-import { revalidatePath } from "next/cache";
-import Image from "next/image";
+import { CheckCircle2, XCircle, Image as ImageIcon } from "lucide-react";
 
-export default async function GalleryModerationPage({
-    params,
-}: {
-    params: Promise<{ id: string }>;
-}) {
-    await connection();
-    const { id } = await params;
-    const supabase = await createClient();
+// Mock data to demonstrate UI behavior
+const mockPhotos = [
+  { id: "1", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc", status: "PENDING_MODERATION", guest: "Juan Pérez" },
+  { id: "2", url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b", status: "APPROVED", guest: "Ana López" },
+  { id: "3", url: "https://images.unsplash.com/photo-1519741497674-611481863552", status: "PENDING_MODERATION", guest: "Carlos Ruiz" },
+];
 
-    const { data: event } = await supabase
-        .from("events")
-        .select("subscription_tier")
-        .eq("id", id)
-        .single();
+export default function DashboardGallery({ params }: { params: { id: string } }) {
+  const [photos, setPhotos] = useState(mockPhotos);
 
-    // En el esquema real profiles tiene subscription_tier, lo dejo simple por ahora
-    const isPremium = true; // TODO: Check actual subscription status
+  const handleApprove = (id: string) => {
+    setPhotos(photos.map(p => p.id === id ? { ...p, status: "APPROVED" } : p));
+  };
 
-    const { data: photos } = await supabase
-        .from("gallery_photos")
-        .select(`
-            *,
-            guest:guests(name)
-        `)
-        .eq("event_id", id)
-        .order("created_at", { ascending: false });
+  const handleReject = (id: string) => {
+    setPhotos(photos.map(p => p.id === id ? { ...p, status: "REJECTED" } : p));
+  };
 
-    async function approvePhoto(photoId: string) {
-        "use server";
-        const sb = await createClient();
-        await sb.from("gallery_photos").update({ status: "APPROVED" }).eq("id", photoId);
-        revalidatePath(`/dashboard/event/${id}/gallery`);
-    }
+  const pendingPhotos = photos.filter(p => p.status === "PENDING_MODERATION");
+  const approvedPhotos = photos.filter(p => p.status === "APPROVED");
 
-    async function rejectPhoto(photoId: string) {
-        "use server";
-        const sb = await createClient();
-        await sb.from("gallery_photos").update({ status: "REJECTED" }).eq("id", photoId);
-        revalidatePath(`/dashboard/event/${id}/gallery`);
-    }
-
-    if (!isPremium) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-center border rounded-xl bg-muted/20">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-2xl">📸</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Galería en Vivo Premium</h3>
-                <p className="text-muted-foreground mb-6 max-w-md">
-                    Actualiza a un plan Premium para permitir que tus invitados suban fotos en tiempo real durante tu evento.
-                </p>
-                <Button>Mejorar Plan</Button>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight">Moderación de Galería</h2>
-                <p className="text-muted-foreground mt-1">
-                    Aprueba o rechaza las fotos subidas por tus invitados antes de que aparezcan en el micrositio.
-                </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {!photos || photos.length === 0 ? (
-                    <div className="col-span-full py-12 text-center text-muted-foreground">
-                        Aún no hay fotos subidas a la galería.
-                    </div>
-                ) : (
-                    photos.map((photo) => (
-                        <Card key={photo.id} className="overflow-hidden group">
-                            <div className="relative aspect-[4/5] bg-muted">
-                                {photo.url ? (
-                                    <Image
-                                        src={photo.url}
-                                        alt="Event photo"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                        Sin previsualización
-                                    </div>
-                                )}
-                                <div className="absolute top-2 right-2 flex flex-col gap-1">
-                                    {photo.status === "PENDING_MODERATION" && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20"><Clock className="w-3 h-3 mr-1" /> Pendiente</Badge>}
-                                    {photo.status === "APPROVED" && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20"><CheckCircle className="w-3 h-3 mr-1" /> Aprobada</Badge>}
-                                    {photo.status === "REJECTED" && <Badge variant="secondary" className="bg-destructive/10 text-destructive border-destructive/20"><XCircle className="w-3 h-3 mr-1" /> Rechazada</Badge>}
-                                </div>
-                            </div>
-                            <CardContent className="p-4 bg-background">
-                                <p className="text-sm font-medium truncate mb-4">
-                                    Subida por: {photo.guest?.name || "Anónimo"}
-                                </p>
-                                <div className="flex gap-2">
-                                    {photo.status !== "APPROVED" && (
-                                        <form action={approvePhoto.bind(null, photo.id)} className="flex-1">
-                                            <Button type="submit" size="sm" variant="outline" className="w-full border-green-500/20 hover:bg-green-500/10 text-green-600">
-                                                Aprobar
-                                            </Button>
-                                        </form>
-                                    )}
-                                    {photo.status !== "REJECTED" && (
-                                        <form action={rejectPhoto.bind(null, photo.id)} className="flex-1">
-                                            <Button type="submit" size="sm" variant="outline" className="w-full border-destructive/20 hover:bg-destructive/10 text-destructive">
-                                                Rechazar
-                                            </Button>
-                                        </form>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                )}
-            </div>
+  return (
+    <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold font-heading">Galería del Evento</h1>
+          <p className="text-muted-foreground mt-2">Modera las fotos subidas por tus invitados en tiempo real.</p>
         </div>
-    );
+        <div className="flex gap-4 text-sm bg-muted px-4 py-2 rounded-lg">
+          <div><span className="font-bold">{pendingPhotos.length}</span> Pendientes</div>
+          <div><span className="font-bold text-green-600">{approvedPhotos.length}</span> Aprobadas</div>
+        </div>
+      </div>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <ImageIcon className="h-5 w-5 text-amber-500" /> Por Moderar
+        </h2>
+
+        {pendingPhotos.length === 0 ? (
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="p-12 text-center text-muted-foreground">
+              No hay fotos pendientes de moderación.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {pendingPhotos.map((photo) => (
+              <Card key={photo.id} className="overflow-hidden group">
+                <div className="aspect-[4/5] relative overflow-hidden bg-muted">
+                  <img src={photo.url} alt="Subida por invitado" className="object-cover w-full h-full" />
+                </div>
+                <CardContent className="p-4 flex items-center justify-between bg-card border-t">
+                  <div className="text-sm">
+                    <p className="font-medium truncate max-w-[120px]">{photo.guest}</p>
+                    <p className="text-xs text-muted-foreground">Hace 5 min</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="icon" variant="outline" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleReject(photo.id)}>
+                      <XCircle className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="outline" className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-50" onClick={() => handleApprove(photo.id)}>
+                      <CheckCircle2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-4 pt-10">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <ImageIcon className="h-5 w-5 text-green-500" /> Galería Pública (Aprobadas)
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {approvedPhotos.map((photo) => (
+            <div key={photo.id} className="aspect-square rounded-xl overflow-hidden relative group">
+              <img src={photo.url} alt="Aprobada" className="object-cover w-full h-full" />
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Button size="sm" variant="destructive" onClick={() => handleReject(photo.id)}>Remover</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
 }

@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# invita-do 🚀
+SaaS B2B2C White-label para la gestión inmersiva de eventos, desde bodas hasta eventos informales.
 
-## Getting Started
+## Características Principales
+- **Gestión Estricta de Invitados:** Control preciso de asistentes, cupos y acompañantes con confirmación rápida (RSVP).
+- **Landings SEO por Nichos:** Páginas de captación hiperoptimizadas para diferentes tipos de eventos (bodas, fiestas, eventos corporativos).
+- **Control de Acceso (QR):** Para eventos clandestinos e informales que requieren entrada rápida.
+- **Galería Inmersiva Post-Evento:** Los invitados suben fotos que perduran como recuerdo compartible.
+- **Suscripciones y Pagos Globales:** Integrado con Stripe para cobros recurrentes sin fronteras.
+- **Asistente IA RAG:** Chatbot inteligente alimentado por los detalles del evento para responder dudas en tiempo real.
 
-First, run the development server:
+## Tech Stack
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS + Framer Motion + Shadcn/UI
+- Zustand + TanStack Query v5
+- Vercel AI SDK
+- Supabase (PostgreSQL, Vector, Storage, RLS)
+- Stripe (Billing / Checkout)
 
+## Desarrollo
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,7 +15,7 @@ import {
     ChevronLeft,
     CreditCard,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
@@ -53,6 +55,7 @@ export function DashboardShell({
     const router = useRouter();
     const { isSidebarOpen, toggleSidebar } = useUIStore();
     const supabase = createClient();
+    const menuId = useId();
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -104,28 +107,28 @@ export function DashboardShell({
                             (item.href !== "/dashboard" &&
                                 pathname.startsWith(item.href));
                         return (
-                            <Link key={item.href} href={item.href}>
-                                <Button
-                                    variant={isActive ? "secondary" : "ghost"}
-                                    className={cn(
-                                        "w-full justify-start gap-3 h-11",
-                                        !isSidebarOpen && "justify-center px-0"
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    buttonVariants({ variant: isActive ? "secondary" : "ghost" }),
+                                    "w-full justify-start gap-3 h-11",
+                                    !isSidebarOpen && "justify-center px-0"
+                                )}
+                            >
+                                <item.icon className="h-5 w-5 shrink-0" />
+                                <AnimatePresence>
+                                    {isSidebarOpen && (
+                                        <motion.span
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="whitespace-nowrap overflow-hidden"
+                                        >
+                                            {item.label}
+                                        </motion.span>
                                     )}
-                                >
-                                    <item.icon className="h-5 w-5 shrink-0" />
-                                    <AnimatePresence>
-                                        {isSidebarOpen && (
-                                            <motion.span
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="whitespace-nowrap overflow-hidden"
-                                            >
-                                                {item.label}
-                                            </motion.span>
-                                        )}
-                                    </AnimatePresence>
-                                </Button>
+                                </AnimatePresence>
                             </Link>
                         );
                     })}
@@ -173,7 +176,7 @@ export function DashboardShell({
                 <header className="h-16 border-b border-border/50 flex items-center justify-between px-6 bg-card/50 backdrop-blur-sm sticky top-0 z-30">
                     <div />
                     <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center gap-3 h-10 pl-2 pr-3 rounded-md hover:bg-accent transition-colors cursor-pointer outline-none">
+                        <DropdownMenuTrigger id={menuId} className="flex items-center gap-3 h-10 pl-2 pr-3 rounded-md hover:bg-accent transition-colors cursor-pointer outline-none">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={user.avatar_url} />
                                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
@@ -181,14 +184,14 @@ export function DashboardShell({
                                 </AvatarFallback>
                             </Avatar>
                             {isSidebarOpen && (
-                                <div className="text-left hidden sm:block">
-                                    <p className="text-sm font-medium leading-none">
+                                <span className="text-left hidden sm:block">
+                                    <span className="block text-sm font-medium leading-none">
                                         {user.full_name || "Mi cuenta"}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                    </span>
+                                    <span className="block text-xs text-muted-foreground mt-0.5">
                                         {user.email}
-                                    </p>
-                                </div>
+                                    </span>
+                                </span>
                             )}
                             <Badge
                                 variant="secondary"

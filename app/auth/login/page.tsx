@@ -27,6 +27,7 @@ export default function LoginPage() {
             },
         });
         if (error) {
+            console.error("Auth Exception (Google):", error);
             toast.error("Error al iniciar sesión con Google");
             setLoading(false);
         }
@@ -46,6 +47,7 @@ export default function LoginPage() {
             },
         });
         if (error) {
+            console.error("Auth Exception (Magic Link):", error);
             toast.error("Error al enviar el Magic Link");
             setLoading(false);
             return;
